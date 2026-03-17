@@ -1,0 +1,6 @@
+---
+- name: restart cups
+  become: true
+  systemd:
+    name: cups
+    state: restarted

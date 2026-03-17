@@ -1,0 +1,14 @@
+---
+# --- Regional ---
+timezone: "America/Montreal"
+ntp_server: "172.30.80.1"
+
+# --- DNS ---
+dns_servers:
+  - 1.1.1.1
+  - 8.8.8.8
+search_domain: "home.lan"
+
+common_ops_user: "ops"
+common_ops_uid: "1000"
+common_ops_shell: "/bin/bash"

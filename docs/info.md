@@ -1,19 +1,24 @@
-# ![Logo](docs/header.png "Logo")
+[Raspberry Pi OS Lite](https://www.raspberrypi.com/software/operating-systems/) is an ARM64 port of Debian that excludes a desktop environment to remain lightweight. It utilizes specific, non-free proprietary firmware found in packages such as `raspberrypi-bootloader` and `firmware-brcm80211` to manage the GPU, Wi-Fi, and Bluetooth. Consequently, the firmware-linux-free package is not required.
 
-![GitHub Stars](https://img.shields.io/github/stars/bhdicaire/repositoryTemplate?style=flat-square&logoColor=186ADE&labelColor=3E5462&color=C25100)
-![GitHub forks](https://img.shields.io/github/forks/bhdicaire/repositoryTemplate?style=flat-square&logoColor=186ADE&labelColor=3E5462&color=C25100)
-![GitHub Last Commit](https://img.shields.io/github/last-commit/bhdicaire/repositoryTemplate?style=flat-square&logoColor=186ADE&labelColor=3E5462&color=C25100)
-![GitHub licence](https://img.shields.io/github/license/bhdicaire/repositoryTemplate?style=flat-square&logoColor=186ADE&labelColor=3E5462&color=C25100)
-
-This is an [ansible](https://www.redhat.com/en/ansible-collaborative) playbook for configuring a [Raspberry Pi](https://www.raspberrypi.com/products/)  device.
-
-[Raspberry Pi OS Lite](https://www.raspberrypi.com/software/operating-systems/) is an ARM64 port of Debian that _excludes a desktop environment_ to remain lightweight. It utilizes specific, non-free proprietary firmware found in packages such as `raspberrypi-bootloader` and `firmware-brcm80211` to manage the GPU, Wi-Fi, and Bluetooth. Consequently, the firmware-linux-free package is not required.
-
-## What problem does it solve and why is it useful?
-
-Setup one or several devices with easy-to-understand instructions that automate the installation and configuration to ensure that everything is configured properly.
-
-## :rocket: Setup
+~~~
+        _,met$$$$$gg.          ops@RaspberryPI
+     ,g$$$$$$$$$$$$$$$P.       -------
+   ,g$$P""       """Y$$.".     OS: Debian GNU/Linux 13 (trixie) aarch64
+  ,$$P'              `$$$.     Host: Raspberry Pi 4 Model B Rev 1.5
+',$$P       ,ggs.     `$$b:    Kernel: Linux 6.12.62+rpt-rpi-v8
+`d$$'     ,$P"'   .    $$$     Uptime: 15 mins
+ $$P      d$'     ,    $$P     Packages: 649 (dpkg)
+ $$:      $$.   -    ,d$$'     Shell: zsh 5.9
+ $$;      Y$b._   _,d$P'       Terminal: /dev/pts/0
+ Y$$.    `.`"Y$$$$P"'          CPU: BCM2711 (4) @ 1.80 GHz
+ `$$b      "-.__               Memory: 187.08 MiB / 7.69 GiB (2%)
+  `Y$$b                        Swap: 0 B / 2.00 GiB (0%)
+   `Y$$.                       Disk (/): 4.22 GiB / 28.79 GiB (15%) - ext4
+     `$$b.                     Local IP (eth0): 172.30.30.125/24
+       `Y$$b.                  Locale: en_CA.UTF-8
+         `"Y$b._
+~~~
+## Setup
 <details>
 <summary>1. Flashing the operating system to microSD</summary>
 
@@ -134,6 +139,31 @@ MicroSD cards are designed to _fail-safe_ by locking themselves into Read-Only m
 A card that is nearly full (e.g., 90%+) will wear out much faster than a card with plenty of free space. This is because the controller has fewer "fresh" cells to rotate through for wear leveling. Keeping a 32GB card at only 15% usage, is actually the best way to preserve its life. Check with `df -k`.
 </details>
 
+**Optional**
+
+<details>
+<summary>TCP/IP</summary>
+{{< include f="unifi-static.md" >}}
+
+{{< include f="debian-ipv6.md" >}}
+
+<details>
+<summary>Setting a Static IPv4 on Debian</summary>
+{{< include f="debian-ipv4.md" >}}
+</details>
+</details>
+<details>
+<summary>Ghostty terminal emulator</summary>
+
+Terminals applications, especially on macOS and Linux have a setting that automatically sends your local environment variables to the remote server. If you're using [Ghostty](ghostty.org) as your terminal emulator, it identifies itself to the Raspberry Pi as `xterm-ghostty` and you'll get: "Error opening terminal: xterm-ghostty".
+
+My sessions stopped trying to be a Ghostty terminal and instead use the universal standard xterm-256color defined in the `~/.config/zsh/.zshrc/`.
+
+I prefer to generate the _right_ locale setting. If you want to prevent this from happening with other future servers _without_ fixing the server side, you can tell your local computer to stop sending those variables by  editing `~/.ssh/config` or `/etc/ssh/ssh_config` and comment out the line `SendEnv LANG LC_*.` and restart the SSH service `sudo systemctl restart ssh`
+
+If you want to keep using Ghostty’s specific advanced features such as specific keybindings, you can "upload" Ghostty's definition to the Pi from your local computer, not inside a SSH session with `infocmp -x xterm-ghostty | ssh username@hostname -- tic -x -`
+
+</details>
 <details>
 <summary>Troubleshooting</summary>
 
@@ -150,15 +180,6 @@ The Raspberry Pi uses blinking LEDs to communicate system health status without 
     * 7 blinks: kernel.img not found (The OS is corrupted).
     * 8 blinks: SDRAM failure (Hardware issue).
 </details>
-
-## Suggestions and improvements are welcome
-
-Pull requests are welcome :grin:
-
-For major changes, please open an issue first to discuss what you would like to change. Refer to the [contribution guidelines](.github/CONTRIBUTING.md) and adhere to this [project's code of conduct](./.github/CODE_OF_CONDUCT.md).
-
-## _piSetup_ by Benoît H. Dicaire is shared with an [MIT license](https://github.com/bhdicaire/piSetup/raw/main/LICENSE).
-[Suggestions and improvements](https://github.com/bhdicaire/piSetup/issues) are welcome!
 
 [^1]: It's highly recommended to use a case with heatsinks or a fan, as the Pi 4 runs hot such as the [Miuzei Aluminiun Raspberry Pi Case Passive Cooling with Heatsink Cooler](https://www.amazon.ca/Miuzei-Raspberry-Aluminum-Conductive-Compatible/dp/B08LVRTYPD)
 [^2]: Out-of-the-box access to your Raspberry Pi from anywhere in the world

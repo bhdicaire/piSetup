@@ -1,0 +1,4 @@
+---
+common_ops_user: "ops"
+common_ops_uid: "1000"
+common_ops_shell: "/bin/bash"

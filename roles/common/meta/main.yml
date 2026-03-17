@@ -1,0 +1,13 @@
+---
+galaxy_info:
+  role_name: common
+  author: bhdicaire
+  description: Shared baseline — ops user, SSH keys, sudo, SSH hardening
+  license: MIT
+  min_ansible_version: "2.14"
+  platforms:
+    - name: Debian
+      versions:
+        - trixie
+
+dependencies: []

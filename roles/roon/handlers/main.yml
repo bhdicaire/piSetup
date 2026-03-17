@@ -1,0 +1,11 @@
+---
+# roles/roon/handlers/main.yml
+
+- name: Reload systemd
+  ansible.builtin.systemd:
+    daemon_reload: true
+
+- name: Restart Roon Server
+  ansible.builtin.systemd:
+    name: roonserver
+    state: restarted

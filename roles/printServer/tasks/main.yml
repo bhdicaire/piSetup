@@ -1,0 +1,55 @@
+---
+- name: Install CUPS and Label Printer Drivers
+  become: true
+  apt:
+    name:
+      - cups
+      - cups-bsd
+      - cups-client
+      - printer-driver-ptouch  # For Brother P-Touch 700
+      - printer-driver-dymo    # For Dymo Twin Turbo
+      - avahi-daemon
+    state: present
+    update_cache: yes
+
+- name: Add user to lpadmin group
+  become: true
+  user:
+    name: "{{ common_ops_user }}"
+    groups: lpadmin
+    append: yes
+
+- name: Configure CUPS for remote access
+  become: true
+  template:
+    src: cupsd.conf.j2
+    dest: /etc/cups/cupsd.conf
+    owner: root
+    group: lp
+    mode: '0644'
+  notify: restart cups
+
+- name: Ensure CUPS and Avahi are running
+  become: true
+  systemd:
+    name: "{{ item }}"
+    state: started
+    enabled: yes
+  loop:
+    - cups
+    - avahi-daemon
+    
+- name: Add Brother P-Touch 700
+  become: true
+  shell: lpadmin -p Brother_P700 -E -v {{ brother_usb_uri }} -m pt700.ppd
+  failed_when: false
+
+- name: Add Dymo Twin Turbo - Left Roll
+  become: true
+  shell: lpadmin -p Dymo_Twin_Left -E -v {{ dymo_usb_uri }} -m lwtt.ppd -o Side=Left
+  failed_when: false
+
+- name: Add Dymo Twin Turbo - Right Roll
+  become: true
+  shell: lpadmin -p Dymo_Twin_Right -E -v {{ dymo_usb_uri }} -m lwtt.ppd -o Side=Right
+  failed_when: false

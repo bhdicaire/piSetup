@@ -1,0 +1,14 @@
+---
+
+# Network
+plex_vlan: 30
+plex_bridge: "vmbr0"
+
+# NIC MAC addresses (from: sudo lspci -nn + ip link show)
+# Intel I226-V  2.5GbE → management
+network_mgmt_mac: "38:05:25:37:22:b2"
+# Realtek RTL8127 10GbE → production
+network_prod_mac: "38:05:25:37:22:b3"
+
+# Management IP — must match your Unifi DHCP reservation for MAC :b2 on VLAN 30
+network_mgmt_ip: "172.30.30.11"

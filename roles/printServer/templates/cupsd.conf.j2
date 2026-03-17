@@ -1,0 +1,26 @@
+# Listen on all interfaces
+Port 631
+Listen /run/cups/cups.sock
+
+# Show shared printers on the local network.
+Browsing On
+BrowseLocalProtocols dnssd
+
+DefaultAuthType Basic
+
+<Location />
+  Order allow,deny
+  Allow @LOCAL
+</Location>
+
+<Location /admin>
+  Order allow,deny
+  Allow @LOCAL
+</Location>
+
+<Location /admin/conf>
+  AuthType Default
+  Require user @SYSTEM
+  Order allow,deny
+  Allow @LOCAL
+</Location>

@@ -1,0 +1,7 @@
+---
+
+- name: Raspberry PI Initial Configuration
+  hosts: pi_nodes
+  roles:
+    - role: common
+    - role: printServer
