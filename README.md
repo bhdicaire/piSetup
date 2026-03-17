@@ -1,9 +1,9 @@
 # ![Logo](docs/header.png "Logo")
 
-![GitHub Stars](https://img.shields.io/github/stars/bhdicaire/repositoryTemplate?style=flat-square&logoColor=186ADE&labelColor=3E5462&color=C25100)
-![GitHub forks](https://img.shields.io/github/forks/bhdicaire/repositoryTemplate?style=flat-square&logoColor=186ADE&labelColor=3E5462&color=C25100)
-![GitHub Last Commit](https://img.shields.io/github/last-commit/bhdicaire/repositoryTemplate?style=flat-square&logoColor=186ADE&labelColor=3E5462&color=C25100)
-![GitHub licence](https://img.shields.io/github/license/bhdicaire/repositoryTemplate?style=flat-square&logoColor=186ADE&labelColor=3E5462&color=C25100)
+![GitHub Stars](https://img.shields.io/github/stars/bhdicaire/piSetup?style=flat-square&logoColor=186ADE&labelColor=3E5462&color=C25100)
+![GitHub forks](https://img.shields.io/github/forks/bhdicaire/piSetup?style=flat-square&logoColor=186ADE&labelColor=3E5462&color=C25100)
+![GitHub Last Commit](https://img.shields.io/github/last-commit/bhdicaire/piSetup?style=flat-square&logoColor=186ADE&labelColor=3E5462&color=C25100)
+![GitHub licence](https://img.shields.io/github/license/bhdicaire/piSetup?style=flat-square&logoColor=186ADE&labelColor=3E5462&color=C25100)
 
 This is an [ansible](https://www.redhat.com/en/ansible-collaborative) playbook for configuring a [Raspberry Pi](https://www.raspberrypi.com/products/)  device.
 
@@ -53,8 +53,10 @@ Obviously, I don't remember _everything_, refer to my [manual documented process
 `ansible-playbook piSetup.yml`
 
 </details>
+
 ### [Suggestions](https://github.com/bhdicaire/piSetup/issues) and pull requests are welcome :grin:
 
 For major changes, please open an issue first to discuss what you would like to change. Refer to the [contribution guidelines](.github/CONTRIBUTING.md) and adhere to this [project's code of conduct](./.github/CODE_OF_CONDUCT.md).
 
-## _piSetup_ by Benoît H. Dicaire is shared with an [MIT license](https://github.com/bhdicaire/piSetup/raw/main/LICENSE).
+## License
+_piSetup_ by Benoît H. Dicaire is shared with an [MIT license](https://github.com/bhdicaire/piSetup/raw/main/LICENSE).
