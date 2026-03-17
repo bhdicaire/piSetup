@@ -1,14 +1,10 @@
 ---
 
+# Printers via 'lpinfo -v | grep usb'
+brother_usb_uri: "usb://Brother/PT-P700?serial=000E8Z343235"
+dymo_usb_uri: "usb://DYMO/LabelWriter%20Twin%20Turbo?serial=%3f%3f%3f%3f%3f%3f%3f%3f%3f%3f%3f%3f%3f%3f"
+
 # Network
-plex_vlan: 30
-plex_bridge: "vmbr0"
-
-# NIC MAC addresses (from: sudo lspci -nn + ip link show)
-# Intel I226-V  2.5GbE → management
-network_mgmt_mac: "38:05:25:37:22:b2"
-# Realtek RTL8127 10GbE → production
-network_prod_mac: "38:05:25:37:22:b3"
-
-# Management IP — must match your Unifi DHCP reservation for MAC :b2 on VLAN 30
-network_mgmt_ip: "172.30.30.11"
+vlan: 80
+network_ip: "dhcp" # IP must match the Unifi DHCP reservation for MAC identified below
+network_mac: "38:05:25:37:22:b2" # NIC MAC addresses (from: sudo lspci -nn + ip link show)

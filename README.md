@@ -50,6 +50,10 @@ Obviously, I don't remember _everything_, refer to my [manual documented process
 </details>
 <details>
 <summary>Ansible playbook</summary>
+I'm running `lpinfo -v | grep usb`
+
+
+
 `ansible-playbook piSetup.yml`
 
 </details>

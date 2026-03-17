@@ -78,52 +78,34 @@
     - { regexp: '^#?PasswordAuthentication', line: 'PasswordAuthentication no' }
   notify: Restart SSH
 
-- name: Create chezmoi config directory
-  ansible.builtin.file:
-    path: /home/{{ common_ops_user }}/.config/chezmoi
-    state: directory
-    owner: "{{ common_ops_user }}"
-    group: "{{ common_ops_user }}"
-    mode: "0755"
-
-- name: Pre-populate chezmoi config (skip interactive prompts)
-  ansible.builtin.copy:
-    content: |
-      [data]
-          email = "{{ chezmoi_email }}"
-          name = "{{ chezmoi_fullname }}"
-          username = "{{ github_username }}"
-          docker = false
-          ephemeral = false
-          headless = true
-          is_server = true
-          secret = false
-          onepasswordAccount = ""
-    dest: /home/{{ common_ops_user }}/.config/chezmoi/chezmoi.toml
-    owner: "{{ common_ops_user }}"
-    group: "{{ common_ops_user }}"
-    mode: "0644"
-    force: false
-
-- name: Install chezmoi
-  ansible.builtin.shell: |
-    sh -c "$(curl -fsLS get.chezmoi.io)" -- -b /home/{{ common_ops_user }}/.config/bin
-  args:
-    creates: /home/{{ common_ops_user }}/.config/bin/chezmoi
+- name: Fix initramfs-tools MODULES configuration
   become: true
-  become_user: "{{ common_ops_user }}"
+  lineinfile:
+    path: /etc/initramfs-tools/initramfs.conf
+    regexp: '^MODULES='
+    line: 'MODULES=most'
+  register: initramfs_config
 
-- name: Initialize chezmoi repo
-  ansible.builtin.shell: |
-    /home/{{ common_ops_user }}/.config/bin/chezmoi init bhdicaire
-  args:
-    creates: /home/{{ common_ops_user }}/.local/share/chezmoi
+- name: Update initramfs if config changed
   become: true
-  become_user: "{{ common_ops_user }}"
+  command: update-initramfs -u
+  when: initramfs_config.changed
 
-- name: Apply chezmoi dotfiles
-  ansible.builtin.shell: |
-    /home/{{ common_ops_user }}/.config/bin/chezmoi update --force
-  become: true
-  become_user: "{{ common_ops_user }}"
-  changed_when: false
+- name: Install Chezmoi
+  block:
+    - name: Install chezmoi binary
+      become: true
+      become_user: "{{ common_ops_user }}"
+      shell: |
+        sh -c "$(curl -fsLS get.chezmoi.io)" -- -b /home/{{ common_ops_user }}/.config/bin
+      args:
+        creates: "/home/{{ common_ops_user }}/.config/bin/chezmoi"
+    - name: Apply chezmoi dotfiles
+      become: true
+      become_user: "{{ common_ops_user }}"
+      shell: |
+        /home/{{ common_ops_user }}/.config/bin/chezmoi init --apply --force bhdicaire
+      environment:
+        DEBIAN_FRONTEND: noninteractive
+      register: chezmoi_apply
+      changed_when: "'Actual' in chezmoi_apply.stdout"
