@@ -1,3 +1,5 @@
+# Manual Setup
+
 [Raspberry Pi OS Lite](https://www.raspberrypi.com/software/operating-systems/) is an ARM64 port of Debian that excludes a desktop environment to remain lightweight. It utilizes specific, non-free proprietary firmware found in packages such as `raspberrypi-bootloader` and `firmware-brcm80211` to manage the GPU, Wi-Fi, and Bluetooth. Consequently, the firmware-linux-free package is not required.
 
 ~~~

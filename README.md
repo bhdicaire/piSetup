@@ -11,7 +11,7 @@ This is an [ansible](https://www.redhat.com/en/ansible-collaborative) playbook f
 
 ## What problem does it solve and why is it useful?
 
-Setup one or several devices with easy-to-understand instructions that automate the installation and configuration to ensure that everything is configured properly.
+Setup one or several devices with easy-to-understand instructions that automate the installation and configuration to ensure that everything is configured properly. I also have a [manual setup](docs/manualSetup.md) if this is your preference.
 
 ## :rocket: Setup
 <details>
