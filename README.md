@@ -11,7 +11,9 @@ This is an [ansible](https://www.redhat.com/en/ansible-collaborative) playbook f
 
 ## What problem does it solve and why is it useful?
 
-Setup one or several devices with easy-to-understand instructions that automate the installation and configuration to ensure that everything is configured properly. I also have a [manual setup](docs/manualSetup.md) if this is your preference.
+Setup one or several devices with easy-to-understand instructions that automate the installation and configuration to ensure that _everything_ is configured properly.
+
+Obviously, I don't remember _everything_, refer to my [manual documented process](docs/process.md). 
 
 ## :rocket: Setup
 <details>
@@ -47,109 +49,7 @@ Setup one or several devices with easy-to-understand instructions that automate 
       * You may need to run ssh-keygen -R hostname.local on your main computer to clear the old SSH key if you change the device hostname or IP address
 </details>
 
-<details>
-<summary>2. Initial Pi setup</summary>
 
-1. Login to the PI: `ssh -o PreferredAuthentications=password -o PubkeyAuthentication=no myuser@hostname`
-2. Install [Chezmoi](https://www.chezmoi.io/) via the [dotFiles repository](https://github.com/bhdicaire/dotFiles)[^4] to apply personal configurations: `sh -c "$(curl -fsLS get.chezmoi.io)" -- -b ~/.config/bin init --apply bhdicaire`
-3. Upload your public key if it's not in the GitHub repository: `cat ~/.ssh/ops.pub | ssh myuser@hostname "mkdir -p ~/.ssh && cat >> ~/.ssh/authorized_key"`
-    * Alternatively, you can add a host entry in your local SSH config: `vi /.ssh/config`
-```bash
-Host pi
-    HostName hostname.local
-    User myuser
-    PreferredAuthentications password
-    PubkeyAuthentication no
-```
-4. Log out of your SSH session: `exit`
-</details>
-<details>
-<summary>3. Hardware Optimization</summary>
-
-1. Login to the PI: `ssh myuser@hostname`
-2. Hardware Optimization, edit `/boot/firmware/config.txt` to reduce power consumption and heat for headless configurations. This includes disabling on-board Wi-Fi and Bluetooth. Replace the current content: `sudo vi /boot/firmware/config.txt`
-``` bash
-# Core Settings
-arm_64bit=1
-arm_boost=1
-disable_overscan=1
-
-# Audio (Keep on if you need sound, otherwise comment out)
-dtparam=audio=on
-
-# Headless Optimizations
-gpu_mem=16
-# dtoverlay=vc4-kms-v3d
-# camera_auto_detect=1
-# display_auto_detect=1
-
-# Hardware Disables (Assuming Ethernet usage)
-dtoverlay=disable-wifi
-dtoverlay=disable-bt
-
-[cm4]
-otg_mode=1
-
-[all]
-enable_uart=1
-```
-
-3. Restart the device: `sudo reboot`
-</details>
-<details>
-<summary>4. Firmware Update</summary>
-
-1. Login to the PI: `ssh myuser@hostname`
-2. Firmware Updates, check the EEPROM status using `sudo rpi-eeprom-update` and apply updates if necessary `sudo rpi-eeprom-update -a`.
-3. Restart the device if you updated the firmware: `sudo reboot`
-</details>
-<details>
-<summary>5. System Fine-Tuning</summary>
-
-1. Login to the PI: `ssh myuser@hostname`
-2. System Fine-Tuning with `sudo raspi-config`:
-    * Ensure the tool itself is current: `8. update`
-    * Change the hostname if required
-    * Set your Timezone and WLAN Country[^5] if required : `5 Localisation Options` > `4 WLAN Country`
-    * Expand the Filesystem, although the Imager usually do it: `6. Advanced Options` > `A1 Expand`
-    * Set behaviour of GPIO case fan: `4 Performance` > `P3 Fan`
-    * Set storage location for logs: `6. Advanced Options` > `A12 logging`> `2 Volatile`
-| Mode | Storage Type | Pros| Cons|
-|:--|:--|:--|:--|:--|
-| Default|SD Card|Persistent across reboots; logs are never lost.|High _write wear_ on microSD cards which can lead to card failure over time
-| Volatile|RAM|Extremely fast; zero wear on the SD card.|All logs are deleted when the Pi is rebooted or loses power.
-| Persistent|SD Card (Optimized)|Keeps logs through reboots.|Still causes physical wear to the SD card though often handled more efficiently
-| None|Disabled|Zero disk usage.|Impossible to troubleshoot system crashes or errors after they happen
-3. Temperature Monitoring with `watch -n 2 vcgencmd measure_temp` to measure in real-time
-    * Idle temperatures between 35°C–45°C are excellent
-    * Under load, temperatures should remain below 70°C if the passive cooling case is performing correctly
-4. Check the current system information with `fastfetch`
-
-Standard microSD cards usually lack the S.M.A.R.T. (Self-Monitoring, Analysis, and Reporting Technology) controllers found in larger drives. Some high-end SD cards like those from SanDisk or Kingston have proprietary ways to report health. If your card supports it, you can check the sysfs interface: `cat /sys/block/mmcblk0/device/life_time`
-  * If this returns two values (e.g., 0x01 0x01), it represents a range of health in 10% increments
-  * On most consumer-grade _Class 10_ cards, this file often doesn't exist or returns an empty value
-
-MicroSD cards are designed to _fail-safe_ by locking themselves into Read-Only mode once their write cycles are exhausted to prevent data corruption. You can check if the kernel has flagged any such issues: `dmesg | grep -i "mmcblk`. Look for errors like `I/O error`, `Read-only file system`, or `Card stuck in recovery` indicating a worn-out card.
-
-A card that is nearly full (e.g., 90%+) will wear out much faster than a card with plenty of free space. This is because the controller has fewer "fresh" cells to rotate through for wear leveling. Keeping a 32GB card at only 15% usage, is actually the best way to preserve its life. Check with `df -k`.
-</details>
-
-<details>
-<summary>Troubleshooting</summary>
-
-The Raspberry Pi uses blinking LEDs to communicate system health status without the need for a display:
-* Red LED (power indicator)
-  * Solid: The system is receiving a steady 5V (specifically above 4.63V).
-  * Flashing: Warning; the power supply is providing insufficient voltage (Under-voltage).
-  * Off: The Pi has no power or has experienced a brownout.
-* Green LED (Activity Indicator)
-  * Solid: Typically occurs during the first second of boot. If it remains solid, the Pi cannot read the SD card.
-  * Irregular Rapid Blinking: Normal operation; indicates the Pi is reading from or writing to the microSD card or EEPROM.
-  * Regular Rhythmic Blinking: Indicates a boot failure:
-    * 4 blinks: start.elf not found (SD card may be empty or corrupted).
-    * 7 blinks: kernel.img not found (The OS is corrupted).
-    * 8 blinks: SDRAM failure (Hardware issue).
-</details>
 
 ## Suggestions and improvements are welcome
 
