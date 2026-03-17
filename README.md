@@ -17,7 +17,7 @@ Obviously, I don't remember _everything_, refer to my [manual documented process
 
 ## :rocket: Setup
 <details>
-<summary>1. Flashing the operating system to microSD</summary>
+<summary>Flashing the operating system to microSD</summary>
 
 1. Hardware Recommendations: A Class 10 microSD card larger than 16GB is recommended. Note that capacities above 2TB are not supported due to Master Boot Record (MBR) limitations. Use the [Raspberry Pi Imager](https://www.raspberrypi.com/software/) for a streamlined installation.
 
@@ -48,19 +48,13 @@ Obviously, I don't remember _everything_, refer to my [manual documented process
       * This explicitly instructs the SSH client to use Password Authentication first. If you have existing SSH keys on your computer, your computer will try to use those keys to log into the Raspberry Pi automatically. You'll get a "Permission denied (publickey)" error before ever giving you a chance to type a password.
       * You may need to run ssh-keygen -R hostname.local on your main computer to clear the old SSH key if you change the device hostname or IP address
 </details>
+<details>
+<summary>Ansible playbook</summary>
+`ansible-playbook piSetup.yml`
 
-
-
-## Suggestions and improvements are welcome
-
-Pull requests are welcome :grin:
+</details>
+### [Suggestions](https://github.com/bhdicaire/piSetup/issues) and pull requests are welcome :grin:
 
 For major changes, please open an issue first to discuss what you would like to change. Refer to the [contribution guidelines](.github/CONTRIBUTING.md) and adhere to this [project's code of conduct](./.github/CODE_OF_CONDUCT.md).
 
 ## _piSetup_ by Benoît H. Dicaire is shared with an [MIT license](https://github.com/bhdicaire/piSetup/raw/main/LICENSE).
-[Suggestions and improvements](https://github.com/bhdicaire/piSetup/issues) are welcome!
-
-[^1]: It's highly recommended to use a case with heatsinks or a fan, as the Pi 4 runs hot such as the [Miuzei Aluminiun Raspberry Pi Case Passive Cooling with Heatsink Cooler](https://www.amazon.ca/Miuzei-Raspberry-Aluminum-Conductive-Compatible/dp/B08LVRTYPD)
-[^2]: Out-of-the-box access to your Raspberry Pi from anywhere in the world
-[^3]: Refer to the [README.md](https://github.com/bhdicaire/dotFiles/blob/main/README.md) for details about the `run_once_before_install-packages.sh`
-[^4]: This is vital for Wi-Fi stability, fortunately I prefer wired connection
