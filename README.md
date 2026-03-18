@@ -5,87 +5,120 @@
 ![GitHub Last Commit](https://img.shields.io/github/last-commit/bhdicaire/piSetup?style=flat-square&logoColor=186ADE&labelColor=3E5462&color=C25100)
 ![GitHub licence](https://img.shields.io/github/license/bhdicaire/piSetup?style=flat-square&logoColor=186ADE&labelColor=3E5462&color=C25100)
 
-This is an [ansible](https://www.redhat.com/en/ansible-collaborative) playbook for configuring a [Raspberry Pi](https://www.raspberrypi.com/products/)  device.
+An [Ansible](https://www.redhat.com/en/ansible-collaborative) playbook for configuring one or more [Raspberry Pi](https://www.raspberrypi.com/products/) devices running [Raspberry Pi OS Lite](https://www.raspberrypi.com/software/operating-systems/) (64-bit).
 
-[Raspberry Pi OS Lite](https://www.raspberrypi.com/software/operating-systems/) is an ARM64 port of Debian that _excludes a desktop environment_ to remain lightweight. It utilizes specific, non-free proprietary firmware found in packages such as `raspberrypi-bootloader` and `firmware-brcm80211` to manage the GPU, Wi-Fi, and Bluetooth. Consequently, the firmware-linux-free package is not required.
+> **Why does this exist?** Setting up a Pi from scratch involves a lot of steps that are easy to forget. This playbook automates the configuration so that every device ends up in a known, reproducible state — whether it's your first Pi or your fifth.
 
-## What problem does it solve and why is it useful?
+## What it configures
 
-Setup one or several devices with easy-to-understand instructions that automate the installation and configuration to ensure that _everything_ is configured properly.
+**Common** (`roles/common`)
 
-Obviously, I don't remember _everything_, refer to my [manual documented process](docs/process.md). 
+- Generate UTF-8 locale
+- Install sudo and common dependencies
+- Configure timezone and hostname
+- Create an `ops` user, install your SSH public key, and grant passwordless sudo
+- Disable root login and password-based SSH authentication
 
-### :notebook_with_decorative_cover: Ingredients
+**Network** (`roles/network`)
 
-<details>
-<summary>Common configuration</summary>
+- Disable IPv6
+- Configure a static IPv4 address on a VLAN-tagged interface (see `host_vars/<hostname>.yml`)
 
-* Generate UTF-8 Locale
-* Install Sudo and dependencies
-* Configure timezone and host name
-* Create Ops user, copy SSH public key, and allow ops passwordless sudo
-* Disable root login and password authentication
-</details>
-<details>
-<summary>Network</summary>
+**Print Server** (`roles/printServer`)
 
- * Disable IPv6
- * Configure IPv4 static address on VLAN 80 Interface <- check host_vars/pi-01.yml
-</details>
+- Install CUPS and Avahi for network printer discovery
+- Configure Brother PTouch and Dymo label printer drivers
 
-<details>
-<summary>Print Server</summary>
+**Dotfiles** (`roles/chezmoi`)
 
-* Install CUPS and Avahi to be available on 172.30.*.* <-- heck .j2
-* Configure CUPS with PTouch and Dymo label printers
-</details>
+- Bootstrap [chezmoi](https://www.chezmoi.io/) and apply personal configuration from your dotfiles repository
 
-## :rocket: Setup
-<details>
-<summary>Flashing the operating system to microSD</summary>
+## Quick Start
 
-1. Hardware Recommendations: A Class 10 microSD card larger than 16GB is recommended. Note that capacities above 2TB are not supported due to Master Boot Record (MBR) limitations. Use the [Raspberry Pi Imager](https://www.raspberrypi.com/software/) for a streamlined installation.
+### 1 — Flash and boot the Pi
 
-    * Device: Select `Raspberry Pi 4 Model B 8GB`[^1]
-    * OS: Select `Raspberry Pi OS (other)` > `Raspberry Pi OS Lite (64-bit)`
-    * Customization Settings:
-      * Hostname: Set a single-word name using only letters, numbers, and hyphens. You can reach it at hostname.local, thanks to mDNS/Avahi, which is built into the OS
-        * Avoid using a Fully Qualified Domain Name (FQDN) unless you have specific SSL requirements:
-          * If you get an SSL certificate (via Let's Encrypt), having the FQDN set can make some automated tools slightly easier to configure
-          * If you are mimicking a data center structure where every machine must belong to a specific sub-domain, especially with Public Certificates
-      * Localization: 
-        * Capital city: `Ottawa (Canada)`
-        * Time zone: `America/Toronto`
-        * Keyboard layout: `us`      
-      * Credentials: Set a unique username and password
-      * Connectivity: Configure Wi-Fi: SSID/password if required and enable SSH with password authentication
-      * [Raspberry Pi Connect](https://www.raspberrypi.com/software/connect/)[^3]: Disable.
-2. Hardware Connection: Insert the card and connect the power supply. A steady red LED indicates power, and the device will boot immediately.
+Follow the [manual setup guide](docs/process.md) to flash the OS, set credentials, and get the device on the network. Come back here once you can SSH in.
 
-    * Power Options:
-      * An USB-C Power Supply (5V 3A recommended)
-      * POE Injector (IEEE 802.3af/at)
-      * PoE splitter that converts Ethernet to 5V USB-C    
-3. Initial Access:
+### 2 — Configure the inventory
 
-    * Connect via a 1GbE network cable, a micro-HDMI display and keyboard
-    * Alternatively, connect via SSH using: `ssh -o PreferredAuthentications=password -o PubkeyAuthentication=no user@hostname`
-      * This explicitly instructs the SSH client to use Password Authentication first. If you have existing SSH keys on your computer, your computer will try to use those keys to log into the Raspberry Pi automatically. You'll get a "Permission denied (publickey)" error before ever giving you a chance to type a password.
-      * You may need to run ssh-keygen -R hostname.local on your main computer to clear the old SSH key if you change the device hostname or IP address
-</details>
-<details>
-<summary>Ansible playbook</summary>
-I'm running `lpinfo -v | grep usb`
+Edit `inventory.ini` to match your device's hostname or IP address:
 
+```ini
+[pi_nodes]
+pi-01 ansible_host=192.168.1.50   # ← change this
+```
 
+### 3 — Set host-specific variables
 
-`ansible-playbook piSetup.yml`
+Copy the example host vars file and adjust it for your device:
 
-</details>
+```bash
+cp host_vars/pi-01.yml host_vars/<your-hostname>.yml
+```
 
-### [Suggestions](https://github.com/bhdicaire/piSetup/issues) and pull requests are welcome :grin:
+Edit the new file to set the correct static IP, VLAN interface, and any other device-specific values. Refer to the comments inside the file for guidance.
 
-For major changes, please open an issue first to discuss what you would like to change. Refer to the [contribution guidelines](.github/CONTRIBUTING.md) and adhere to this [project's code of conduct](./.github/CODE_OF_CONDUCT.md).
+### 4 — Enable the roles you need
+
+Open `piSetup.yml` and uncomment the roles you want to apply:
+
+```yaml
+- name: Raspberry Pi Configuration
+  hosts: pi_nodes
+  roles:
+    - common        # Always recommended
+    - network       # Static IP + disable IPv6
+    # - printServer # CUPS + label printer support
+    # - chezmoi     # Personal dotfiles
+```
+
+### 5 — Run the playbook
+
+```bash
+ansible-playbook piSetup.yml
+```
+
+For the very first run, Ansible needs to authenticate with a password before SSH key-based access is configured:
+
+```bash
+ansible-playbook piSetup.yml --ask-pass
+```
+
+You can also limit execution to a single host or a specific role using tags:
+
+```bash
+ansible-playbook piSetup.yml --limit pi-01
+ansible-playbook piSetup.yml --tags network
+```
+
+## Project structure
+
+```
+piSetup/
+├── ansible.cfg            # Ansible defaults (SSH, privilege escalation)
+├── inventory.ini          # List of Pi devices
+├── piSetup.yml            # Main playbook
+├── group_vars/all/        # Variables shared across all hosts
+├── host_vars/             # Per-device overrides (IP, VLAN interface, etc.)
+├── roles/
+│   ├── common/            # Base system configuration
+│   ├── network/           # Static IP and IPv6 hardening
+│   ├── printServer/       # CUPS + label printers
+│   └── chezmoi/           # Dotfiles bootstrap
+└── docs/
+    ├── process.md         # Manual setup guide (flash, hardware, firmware)
+    └── troubleshooting.md # LED codes, common errors, diagnostic commands
+```
+
+## Documentation
+
+- [Manual setup process](docs/process.md) — step-by-step guide to flash the OS, optimize hardware, and update firmware before running Ansible
+- [Troubleshooting](docs/troubleshooting.md) — LED status codes, SSH errors, SD card health, and common issues
+
+## Contributing
+
+[Suggestions](https://github.com/bhdicaire/piSetup/issues) and pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change. Refer to the [contribution guidelines](.github/CONTRIBUTING.md) and adhere to this project's [code of conduct](.github/CODE_OF_CONDUCT.md).
 
 ## License
-_piSetup_ by Benoît H. Dicaire is shared with an [MIT license](https://github.com/bhdicaire/piSetup/raw/main/LICENSE).
+
+*piSetup* by Benoît H. Dicaire is shared under the [MIT license](LICENSE).

@@ -1,9 +1,15 @@
 ---
-
-- name: Raspberry PI Configuration
+- name: Raspberry Pi Configuration
   hosts: pi_nodes
   roles:
-#     - common
-#     - network
-    - chezmoi
-#     - printServer
+    - role: common
+      tags: [common, base]
+
+    - role: network
+      tags: [network]
+
+    - role: printServer
+      tags: [print]
+
+    - role: chezmoi
+      tags: [chezmoi, dotfiles]
