@@ -10,30 +10,32 @@ An [Ansible](https://www.redhat.com/en/ansible-collaborative) playbook for confi
 > **Why does this exist?** Setting up a Pi from scratch involves a lot of steps that are easy to forget. This playbook automates the configuration so that every device ends up in a known, reproducible state — whether it's your first Pi or your fifth.
 
 ## What it configures
-
+←
+→
 **Common** (`roles/common`)
 
 - Generate UTF-8 locale
-- Install sudo and common dependencies
-- Configure timezone and hostname
+- Install common dependencies not included with [Raspberry Pi OS Lite](https://www.raspberrypi.com/software/operating-systems/)
+- Configure timezone ← `group_vars/all/infrastructure.yml`
+- Configure hostname ← `host_vars/<hostname>.yml`, you can use `host_vars/pi-01.yml` as template
 - Create an `ops` user, install your SSH public key, and grant passwordless sudo
 - Disable root login and password-based SSH authentication
 
 **Network** (`roles/network`)
 
 - Disable IPv6
-- Configure a static IPv4 address on a VLAN-tagged interface (see `host_vars/<hostname>.yml`)
+- Configure a static IPv4 address on a VLAN-tagged interface ← `host_vars/<hostname>.yml`
 
 **Print Server** (`roles/printServer`)
 
-- Install CUPS and Avahi for network printer discovery
-- Configure Brother PTouch and Dymo label printer drivers
+- Install [CUPS](https://www.cups.org/) and [Avahi](https://avahi.org/) for network printer discovery
+- Configure [Brother P-Touch](https://www.brother.ca/en/computer-connected-label-makers/c/pr-labelling-cpuConnected) and [Dymo](https://www.dymo.ca/label-makers-printers/labelwriter-label-printers/) label printer drivers
 
 **Dotfiles** (`roles/chezmoi`)
 
-- Bootstrap [chezmoi](https://www.chezmoi.io/) and apply personal configuration from your dotfiles repository
+- Bootstrap [chezmoi](https://www.chezmoi.io/) and apply personal configuration from your [dotFiles repository](https://github.com/bhdicaire/dotFiles)
 
-## Quick Start
+## :rocket: Quick Start
 
 ### 1 — Flash and boot the Pi
 
@@ -46,9 +48,17 @@ Edit `inventory.ini` to match your device's hostname or IP address:
 ```ini
 [pi_nodes]
 pi-01 ansible_host=192.168.1.50   # ← change this
+pi-02 ansible_host=192.168.1.51   # ← change this
 ```
 
-### 3 — Set host-specific variables
+### 3 — Set global and host-specific variables
+
+Copy the infrastructure vars file and adjust it for your ecosystem:
+```bash
+cp group_vars/all/infrastructure.yml group_vars/all/ecosystem.yml
+```
+Edit the new file to set the correct values. Refer to the comments inside the file for guidance.
+
 
 Copy the example host vars file and adjust it for your device:
 
@@ -112,7 +122,7 @@ piSetup/
 
 ## Documentation
 
-- [Manual setup process](docs/process.md) — step-by-step guide to flash the OS, optimize hardware, and update firmware before running Ansible
+- [Manual guide](docs/guide.md) — step-by-step guide to flash the OS, optimize hardware, and update firmware before running Ansible
 - [Troubleshooting](docs/troubleshooting.md) — LED status codes, SSH errors, SD card health, and common issues
 
 ## Contributing
