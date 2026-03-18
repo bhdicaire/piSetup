@@ -1,0 +1,10 @@
+---
+network_setup:
+  vlan_id: 80
+  vlan_interface: eth0
+  vlan_name: "eth0.80"
+  vlan_interface_mac: "38:05:25:37:22:b2"
+  method: auto
+  vlan_gateway: "172.30.80.1"   # For Ansible ping validation
+  route_metric: 10
+  native_method: disabled

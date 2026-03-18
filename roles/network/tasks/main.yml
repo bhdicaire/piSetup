@@ -1,0 +1,82 @@
+---
+- name: Ensure NetworkManager and Python dependencies are installed
+  become: true
+  apt:
+    name:
+      - network-manager
+      - python3-dbus
+      - python3-gi
+    state: present
+    update_cache: yes
+
+- name: Ensure NetworkManager is started and enabled
+  become: true
+  service:
+    name: NetworkManager
+    state: started
+    enabled: yes
+
+- name: Disable IPv6
+  ansible.posix.sysctl:
+    name: "{{ item }}"
+    value: "1"
+    sysctl_file: /etc/sysctl.d/99-disable-ipv6.conf
+    reload: true
+  loop:
+    - net.ipv6.conf.all.disable_ipv6
+    - net.ipv6.conf.default.disable_ipv6
+
+- name: Configure VLAN 80 Interface
+  become: true
+  community.general.nmcli:
+    conn_name: "VLAN-{{ network_setup.vlan_id }}"
+    ifname: "{{ network_setup.vlan_name }}"
+    type: vlan
+    vlanid: "{{ network_setup.vlan_id }}"
+    vlandev: "{{ network_setup.vlan_interface }}"
+    state: present
+    method4: "{{ network_setup.method }}"
+    ip4: "{{ network_setup.ip_address | default(omit) }}"
+    gw4: "{{ network_setup.gateway | default(omit) }}"
+    dns4: "{{ network_setup.dns_servers | default(omit) }}"
+    route_metric4: "{{ network_setup.route_metric | default(10) }}"
+  register: vlan_setup
+
+- name: Apply changes if configuration changed
+  become: true
+  shell: "nmcli connection up VLAN-{{ network_setup.vlan_id }}"
+  when: vlan_setup.changed
+
+- name: Wait for interface to settle
+  pause:
+    seconds: 5
+  when: vlan_setup.changed
+
+- name: Verify connectivity to VLAN gateway
+  shell: "ping -I {{ network_setup.vlan_name }} -c 3 {{ network_setup.vlan_gateway }}"
+  register: ping_check
+  changed_when: false
+
+- name: Deprioritize native eth0
+  become: true
+  community.general.nmcli:
+    conn_name: "{{ network_setup.vlan_interface }}"
+    ifname: "{{ network_setup.vlan_interface }}"
+    type: ethernet
+    method4: auto
+    route_metric4: 2000
+    state: present
+  register: eth0_deprioritize
+
+- name: Reload physical interface
+  become: true
+  shell: "nmcli connection up {{ network_setup.vlan_interface }}"
+  when: eth0_deprioritize.changed # Only reload if something changed
+
+- name: Network Configuration Summary
+  debug:
+    msg:
+      - "Host: {{ inventory_hostname }}"
+      - "VLAN Interface: {{ network_setup.vlan_name }} (IP: {{ network_setup.ip_address }})"
+      - "VLAN Gateway: {{ network_setup.gateway }}"
+      - "Native Eth0 Metric: 2000"
