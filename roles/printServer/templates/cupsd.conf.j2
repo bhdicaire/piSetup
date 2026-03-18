@@ -1,20 +1,28 @@
-# Listen on all interfaces
+# Allow access from any hostname (Fixes the 403 Forbidden)
+ServerAlias *
+
+# Listen on all interfaces on port 631
 Port 631
 Listen /run/cups/cups.sock
 
-# Show shared printers on the local network.
+# Show shared printers on the local network
 Browsing On
 BrowseLocalProtocols dnssd
+BrowseAddress @LOCAL
 
+# Default authentication
 DefaultAuthType Basic
 
 <Location />
   Order allow,deny
+  # Allow your specific VLAN subnet
+  Allow from 172.30.*.*
   Allow @LOCAL
 </Location>
 
 <Location /admin>
   Order allow,deny
+  Allow from 172.30.*.*
   Allow @LOCAL
 </Location>
 
@@ -22,5 +30,6 @@ DefaultAuthType Basic
   AuthType Default
   Require user @SYSTEM
   Order allow,deny
+  Allow from 172.30.*.*
   Allow @LOCAL
 </Location>

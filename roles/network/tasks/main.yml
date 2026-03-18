@@ -39,44 +39,33 @@
     ip4: "{{ network_setup.ip_address | default(omit) }}"
     gw4: "{{ network_setup.gateway | default(omit) }}"
     dns4: "{{ network_setup.dns_servers | default(omit) }}"
-    route_metric4: "{{ network_setup.route_metric | default(10) }}"
+    route_metric4: 10
   register: vlan_setup
 
-- name: Apply changes if configuration changed
-  become: true
-  shell: "nmcli connection up VLAN-{{ network_setup.vlan_id }}"
-  when: vlan_setup.changed
-
-- name: Wait for interface to settle
-  pause:
-    seconds: 5
-  when: vlan_setup.changed
-
-- name: Verify connectivity to VLAN gateway
-  shell: "ping -I {{ network_setup.vlan_name }} -c 3 {{ network_setup.vlan_gateway }}"
-  register: ping_check
-  changed_when: false
-
-- name: Deprioritize native eth0
+- name: Lockdown native eth0 (Kill IPv4/DHCP)
   become: true
   community.general.nmcli:
     conn_name: "{{ network_setup.vlan_interface }}"
     ifname: "{{ network_setup.vlan_interface }}"
     type: ethernet
-    method4: auto
-    route_metric4: 2000
     state: present
-  register: eth0_deprioritize
+    method4: disabled  # This removes the 192.168.x.x IP
+    route_metric4: 2000
+  register: eth0_lockdown
 
-- name: Reload physical interface
+- name: Apply network changes
   become: true
-  shell: "nmcli connection up {{ network_setup.vlan_interface }}"
-  when: eth0_deprioritize.changed # Only reload if something changed
+  shell: |
+    nmcli connection reload
+    nmcli connection up "VLAN-{{ network_setup.vlan_id }}"
+  register: net_apply
+  # We ignore failures here because if the IP changes,
+  # the SSH connection might drop, which Ansible sees as a failure.
+  ignore_unreachable: yes
+  failed_when: false
+  when: vlan_setup.changed or eth0_lockdown.changed
 
-- name: Network Configuration Summary
-  debug:
-    msg:
-      - "Host: {{ inventory_hostname }}"
-      - "VLAN Interface: {{ network_setup.vlan_name }} (IP: {{ network_setup.ip_address }})"
-      - "VLAN Gateway: {{ network_setup.gateway }}"
-      - "Native Eth0 Metric: 2000"
+- name: Wait for connection to migrate to VLAN 80
+  wait_for_connection:
+    delay: 5
+    timeout: 60

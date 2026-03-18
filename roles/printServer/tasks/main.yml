@@ -6,9 +6,10 @@
       - cups
       - cups-bsd
       - cups-client
-      - printer-driver-ptouch  # For Brother P-Touch 700
-      - printer-driver-dymo    # For Dymo Twin Turbo
+      - printer-driver-ptouch
+      - printer-driver-dymo
       - avahi-daemon
+      - avahi-utils
     state: present
     update_cache: yes
 
@@ -29,27 +30,63 @@
     mode: '0644'
   notify: restart cups
 
+- name: Prevent CUPS from stopping when idle (Override systemd)
+  become: true
+  file:
+    path: /etc/systemd/system/cups.service.d
+    state: directory
+
+- name: Force CUPS to stay active (Ignore IdleExit)
+  become: true
+  copy:
+    dest: /etc/systemd/system/cups.service.d/override.conf
+    content: |
+      [Service]
+      ExecStart=
+      ExecStart=/usr/sbin/cupsd -l
+      Restart=always
+  register: cups_override
+
+- name: Reload systemd and restart CUPS
+  become: true
+  systemd:
+    name: cups
+    state: restarted
+    daemon_reload: yes
+  when: cups_override.changed
+
 - name: Ensure CUPS and Avahi are running
   become: true
   systemd:
     name: "{{ item }}"
     state: started
     enabled: yes
+    masked: no
   loop:
     - cups
     - avahi-daemon
-    
+
+- name: Disable socket activation to prevent sleep
+  become: true
+  systemd:
+    name: "{{ item }}"
+    enabled: no
+    state: stopped
+  loop:
+    - cups.socket
+    - cups.path
+
 - name: Add Brother P-Touch 700
   become: true
-  shell: lpadmin -p Brother_P700 -E -v {{ brother_usb_uri }} -m pt700.ppd
+  shell: lpadmin -p Brother_P700 -E -v "{{ brother_usb_uri }}" -m "{{ brother_ppd }}"
   failed_when: false
 
 - name: Add Dymo Twin Turbo - Left Roll
   become: true
-  shell: lpadmin -p Dymo_Twin_Left -E -v {{ dymo_usb_uri }} -m lwtt.ppd -o Side=Left
+  shell: lpadmin -p Dymo_Twin_Left -E -v "{{ dymo_usb_uri }}" -m "{{ dymo_ppd }}" -o Side=Left
   failed_when: false
 
 - name: Add Dymo Twin Turbo - Right Roll
   become: true
-  shell: lpadmin -p Dymo_Twin_Right -E -v {{ dymo_usb_uri }} -m lwtt.ppd -o Side=Right
+  shell: lpadmin -p Dymo_Twin_Right -E -v "{{ dymo_usb_uri }}" -m "{{ dymo_ppd }}" -o Side=Right
   failed_when: false

@@ -18,19 +18,38 @@
 
 - name: Configure Debian host
   block:
+    - name: Disable cloud-init to prevent hostname reverts
+      become: true
+      file:
+        path: /etc/cloud/cloud-init.disabled
+        state: touch
+        owner: root
+        group: root
+        mode: '0644'
+
     - name: Set system timezone
       ansible.builtin.timezone:
         name: "{{ timezone }}"
 
     - name: Set hostname
+      become: true
       ansible.builtin.hostname:
         name: "{{ inventory_hostname }}"
+      register: hostname_changed
 
-    - name: Update /etc/hosts
-      ansible.builtin.lineinfile:
+    - name: Update /etc/hosts for local resolution
+      become: true
+      lineinfile:
         path: /etc/hosts
-        regexp: '127\.0\.1\.1.*'
+        regexp: '^127.0.1.1'
         line: "127.0.1.1 {{ inventory_hostname }}"
+
+    - name: Restart Avahi to broadcast new name
+      become: true
+      systemd:
+        name: avahi-daemon
+        state: restarted
+      when: hostname_changed.changed
 
 - name: Create ops user
   ansible.builtin.user:
@@ -68,33 +87,16 @@
   notify: Restart SSH
 
 - name: Fix initramfs-tools MODULES configuration
-  become: true
-  lineinfile:
-    path: /etc/initramfs-tools/initramfs.conf
-    regexp: '^MODULES='
-    line: 'MODULES=most'
-  register: initramfs_config
-
-- name: Update initramfs if config changed
-  become: true
-  command: update-initramfs -u
-  when: initramfs_config.changed
-
-- name: Install Chezmoi
   block:
-    - name: Install chezmoi binary
+    - name: Fix initramfs-tools MODULES configuration
       become: true
-      become_user: "{{ common_ops_user }}"
-      shell: |
-        sh -c "$(curl -fsLS get.chezmoi.io)" -- -b /home/{{ common_ops_user }}/.config/bin
-      args:
-        creates: "/home/{{ common_ops_user }}/.config/bin/chezmoi"
-    - name: Apply chezmoi dotfiles
+      lineinfile:
+        path: /etc/initramfs-tools/initramfs.conf
+        regexp: '^MODULES='
+        line: 'MODULES=most'
+      register: initramfs_config
+
+    - name: Update initramfs if config changed
       become: true
-      become_user: "{{ common_ops_user }}"
-      shell: |
-        /home/{{ common_ops_user }}/.config/bin/chezmoi init --apply --force bhdicaire
-      environment:
-        DEBIAN_FRONTEND: noninteractive
-      register: chezmoi_apply
-      changed_when: "'Actual' in chezmoi_apply.stdout"
+      command: update-initramfs -u
+      when: initramfs_config.changed

@@ -1,0 +1,46 @@
+---
+- name: Install ZSH
+  become: true
+  apt:
+    name: zsh
+    state: present
+    update_cache: yes
+
+- name: Change shell to ZSH for ops user
+  become: true
+  user:
+    name: "{{ common_ops_user }}"
+    shell: /usr/bin/zsh
+
+- name: Ensure .config/bin exists in PATH
+  become: true
+  become_user: "{{ common_ops_user }}"
+  file:
+    path: "/home/{{ common_ops_user }}/.config/bin"
+    state: directory
+    mode: '0755'
+
+- name: Install Chezmoi binary
+  become: true
+  become_user: "{{ common_ops_user }}"
+  shell: |
+    sh -c "$(curl -fsLS get.chezmoi.io)" -- -b /home/{{ common_ops_user }}/.config/bin
+  args:
+    creates: "/home/{{ common_ops_user }}/.config/bin/chezmoi"
+
+- name: Apply Chezmoi dotfiles
+  become: true
+  become_user: "{{ common_ops_user }}"
+  shell: |
+    /home/{{ common_ops_user }}/.config/bin/chezmoi init --apply --force bhdicaire
+  environment:
+    DEBIAN_FRONTEND: noninteractive
+  register: chezmoi_apply
+  changed_when: "'Actual' in chezmoi_apply.stdout or 'diff' in chezmoi_apply.stdout"
+
+- name: Force refresh ZSH config
+  become: true
+  become_user: "{{ common_ops_user }}"
+  shell: "/usr/bin/zsh -c 'source ~/.zshrc'"
+  when: chezmoi_apply.changed
+  failed_when: false
