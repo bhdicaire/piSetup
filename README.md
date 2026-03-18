@@ -15,6 +15,31 @@ Setup one or several devices with easy-to-understand instructions that automate 
 
 Obviously, I don't remember _everything_, refer to my [manual documented process](docs/process.md). 
 
+### :notebook_with_decorative_cover: Ingredients
+
+<details>
+<summary>Common configuration</summary>
+
+* Generate UTF-8 Locale
+* Install Sudo and dependencies
+* Configure timezone and host name
+* Create Ops user, copy SSH public key, and allow ops passwordless sudo
+* Disable root login and password authentication
+</details>
+<details>
+<summary>Network</summary>
+
+ * Disable IPv6
+ * Configure IPv4 static address on VLAN 80 Interface <- check host_vars/pi-01.yml
+</details>
+
+<details>
+<summary>Print Server</summary>
+
+* Install CUPS and Avahi to be available on 172.30.*.* <-- heck .j2
+* Configure CUPS with PTouch and Dymo label printers
+</details>
+
 ## :rocket: Setup
 <details>
 <summary>Flashing the operating system to microSD</summary>

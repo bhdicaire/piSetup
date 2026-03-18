@@ -39,21 +39,3 @@ You should disable cloud-init to stop running on subsequent boots: `sudo touch /
 5. Try to kick the service back to life
   * `sudo systemctl enable cups`
   * `sudo systemctl restart cups
-
-
-INgredients:
-Common
-* Generate UTF-8 Locale
-* Install Sudo and dependencies
-* Configure timezone and host name
-* Create Ops user, copy SSH public key, allow ops passwordless sudo
-*  Harden SSH — disable root login and password auth
-Install chezmoi binary & dotFiles
-
-Network
- * Disable IPv6
- * Configure IPv4 static address on VLAN 80 Interface
-
-PrintServer
-* Install CUPS and Avahi to be available on 172.30.*.*
-* Configure CUPS with PTouch and Dymo label printers
