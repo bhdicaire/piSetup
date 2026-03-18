@@ -78,8 +78,8 @@ Open `piSetup.yml` and uncomment the roles you want to apply:
   roles:
     - common        # Always recommended
     - network       # Static IP + disable IPv6
-    # - printServer # CUPS + label printer support
-    # - chezmoi     # Personal dotfiles
+    - printServer   # CUPS + label printer support
+    - chezmoi       # Personal dotfiles
 ```
 
 ### 5 — Run the playbook
@@ -114,10 +114,10 @@ piSetup/
 │   ├── common/            # Base system configuration
 │   ├── network/           # Static IP and IPv6 hardening
 │   ├── printServer/       # CUPS + label printers
-│   └── chezmoi/           # Dotfiles bootstrap
+│   └── chezmoi/           # dotFiles bootstrap
 └── docs/
-    ├── process.md         # Manual setup guide (flash, hardware, firmware)
-    └── troubleshooting.md # LED codes, common errors, diagnostic commands
+    ├── guide.md            # Manual setup guide (flash, hardware, firmware)
+    └── troubleshooting.md  # LED codes, common errors, diagnostic commands
 ```
 
 ## Documentation
